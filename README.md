@@ -1,8 +1,28 @@
-# n8n Easy Deploy
+<!-- Banner Image -->
+<p align="center">
+  <img src="assets/banner.png" alt="n8n Easy Deploy Banner" width="800">
+</p>
 
-A simple, modular, and secure deployment tool for self-hosted n8n instances.
+<h1 align="center">n8n Easy Deploy</h1>
 
-n8n Easy Deploy simplifies the entire lifecycle of your n8n deployment—from initial configuration and service startup to blue-green updates and automated backups/restorations. Designed with a modular architecture, it provides a robust, user-friendly solution with a clean and organized codebase.
+<p align="center">
+  <a href="https://github.com/yourusername/n8n-easy-deploy/actions">
+    <img src="https://img.shields.io/github/workflow/status/yourusername/n8n-easy-deploy/CI?style=for-the-badge" alt="CI Status">
+  </a>
+  <a href="https://github.com/yourusername/n8n-easy-deploy/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/yourusername/n8n-easy-deploy?style=for-the-badge" alt="License">
+  </a>
+  <a href="https://github.com/yourusername/n8n-easy-deploy/issues">
+    <img src="https://img.shields.io/github/issues/yourusername/n8n-easy-deploy?style=for-the-badge" alt="Issues">
+  </a>
+  <a href="https://github.com/yourusername/n8n-easy-deploy">
+    <img src="https://img.shields.io/github/stars/yourusername/n8n-easy-deploy?style=for-the-badge" alt="Stars">
+  </a>
+</p>
+
+<p align="center">
+  <strong>A simple, modular, and secure deployment tool for self-hosted n8n instances.</strong>
+</p>
 
 ---
 
@@ -26,31 +46,37 @@ n8n Easy Deploy simplifies the entire lifecycle of your n8n deployment—from in
 
 ## Overview
 
-**n8n Easy Deploy** is a modular, open-source deployment tool designed for self-hosted n8n instances. It streamlines deployment, update, and backup/restore processes for your automation workflows and configuration. Whether you’re a technical or non-technical user, this tool simplifies managing your n8n environment with:
+**n8n Easy Deploy** streamlines the entire lifecycle of your self-hosted n8n instance—from initial configuration and service startup to blue-green updates and automated backups/restorations. Its modular architecture ensures that even complex deployments are easy to manage.
 
-- Zero downtime blue-green deployments.
-- Automated backups of your database, configuration, and even workflows/credentials.
-- Dynamic Traefik configuration for domain and SSL management.
-- Robust error handling and logging.
+Key benefits include:
+
+- **Zero Downtime Deployments:**  
+  Blue-green deployments keep your service running without interruption.
+- **Automated Backups & Restores:**  
+  Securely back up your data locally or to AWS S3.
+- **Dynamic Traefik Integration:**  
+  Automatically manage domain names and SSL certificates.
+- **User-Friendly:**  
+  Designed for both technical and non-technical users with robust error handling and logging.
 
 ---
 
 ## Features
 
 - **Modular Architecture:**  
-  Clean separation of configuration files, function libraries, Docker Compose templates, and Traefik configurations.
-
+  Organized configuration files, function libraries, Docker Compose templates, and Traefik configurations for easy customization.
+  
 - **Full Deployment & Updates:**  
-  Initialize your environment, start services, and perform blue-green updates with a single command.
-
-- **Automated Backups & Restore:**  
-  Securely back up your database and configuration locally or to AWS S3, and export/import your n8n workflows and credentials.
-
+  Seamlessly deploy new instances or update existing ones using blue-green deployment techniques.
+  
+- **Automated Backups & Restores:**  
+  Schedule and execute secure backups for your database, configuration, workflows, and credentials.
+  
 - **Traefik Integration:**  
-  Automatically generate dynamic Traefik configurations for custom domains and SSL certificates.
-
+  Simplify domain and SSL management with dynamic Traefik configuration.
+  
 - **Robust Error Handling:**  
-  Built-in logging and error traps ensure issues are caught and reported, making maintenance easier.
+  Comprehensive logging and error detection ensure that issues are quickly identified and resolved.
 
 ---
 
@@ -58,94 +84,90 @@ n8n Easy Deploy simplifies the entire lifecycle of your n8n deployment—from in
 
 ```plaintext
 n8n-easy-deploy/
-├── README.md                # This file
-├── LICENSE                  # License file (MIT License recommended)
-├── Makefile                 # Simplify common tasks
+├── README.md                  # Project documentation
+├── LICENSE                    # License file (MIT recommended)
+├── Makefile                   # Simplify common tasks
 ├── config/
-│   ├── .env.example         # Sample environment variables
-│   ├── docker-compose.yml   # Docker Compose file template
+│   ├── .env.example           # Sample environment variables
+│   ├── docker-compose.yml     # Docker Compose template
 │   └── traefik/
-│       └── n8n.yaml.template  # Traefik dynamic configuration template
+│       └── n8n.yaml.template  # Traefik configuration template
 ├── scripts/
 │   ├── n8n-ctl.sh           # Main entrypoint script
-│   └── functions.sh         # All function definitions (deployment, backup, restore, etc.)
-├── backups/                 # Directory for backup archives (created at runtime)
-└── logs/                    # Log files directory (created at runtime)
+│   └── functions.sh         # Function definitions (deploy, backup, etc.)
+├── backups/                   # Directory for backup archives (created at runtime)
+└── logs/                      # Log files directory (created at runtime)
 Prerequisites
-Docker and Docker Compose
-Ensure Docker and Docker Compose are installed on your system.
+Before getting started, ensure you have the following installed:
 
-AWS CLI
-Required for backup/restore to/from AWS S3 (if used).
+Docker & Docker Compose:
+Required for containerizing and orchestrating services.
 
-Traefik
-Must be installed and running for domain/SSL automation.
+AWS CLI:
+Needed for backup/restore operations to/from AWS S3.
 
-Sudo Privileges
-Required for system-level changes (e.g., reloading Traefik).
+Traefik:
+For managing domain and SSL automation.
+
+Sudo Privileges:
+Necessary for system-level changes (e.g., reloading Traefik).
 
 Installation
-Clone the Repository:
+Clone the repository and navigate into the project directory:
 
 bash
 Copy
 git clone https://github.com/yourusername/n8n-easy-deploy.git
 cd n8n-easy-deploy
-Set Up Environment Variables:
-
-Copy the sample environment file and edit it with your configuration:
+Set up your environment by copying and editing the sample environment file:
 
 bash
 Copy
 cp config/.env.example config/.env
-# Open config/.env with your favorite editor and update the values.
-Review Docker Compose and Traefik Templates:
-
-Check the files in the config/ directory and update them as needed.
-
-Make Scripts Executable:
+# Then, open config/.env in your preferred editor and update the values.
+Ensure the main script is executable:
 
 bash
 Copy
 chmod +x scripts/n8n-ctl.sh
 Configuration
-config/.env:
-Contains settings for n8n, database, AWS S3, and domain/SSL. Copy from .env.example and update as required.
+config/.env
+This file contains settings for n8n, your database, AWS S3, and domain/SSL configurations. Copy from .env.example and modify as required.
 
-config/docker-compose.yml:
-Defines the Docker services (n8n, PostgreSQL, Redis) and uses environment variables from .env.
+config/docker-compose.yml
+Defines the Docker services (n8n, PostgreSQL, Redis) using the variables from your .env file.
 
-config/traefik/n8n.yaml.template:
-Template for Traefik’s dynamic configuration. Placeholders are replaced by values from .env during deployment.
+config/traefik/n8n.yaml.template
+Template for Traefik’s dynamic configuration. Placeholders here are replaced by values from .env during deployment.
 
 Usage
 Interactive Mode
-Run the main script to display an interactive menu:
+Launch the main script to access an interactive menu:
 
 bash
 Copy
 ./scripts/n8n-ctl.sh
-The menu includes options to:
+The menu offers options to:
 
 Deploy a new instance
 Update the instance
-Create or restore backups (for DB/config and workflows/credentials)
+Backup and restore your setup
 Perform system checks
 Command-Line Mode
-Execute specific commands directly:
+You can also execute commands directly:
 
 bash
 Copy
 ./scripts/n8n-ctl.sh deploy        # Full deployment (blue-green update)
-./scripts/n8n-ctl.sh update        # Update instance (manual update or toggle auto-update)
+./scripts/n8n-ctl.sh update        # Update your instance
 ./scripts/n8n-ctl.sh backup        # Backup database & configuration
-./scripts/n8n-ctl.sh restore       # Restore backup from AWS S3 or local storage
+./scripts/n8n-ctl.sh restore       # Restore from backup (AWS S3 or local)
 ./scripts/n8n-ctl.sh backupwc      # Backup workflows & credentials
 ./scripts/n8n-ctl.sh restorewc     # Restore workflows & credentials
-./scripts/n8n-ctl.sh check         # Check and repair common issues
+./scripts/n8n-ctl.sh check         # Run system checks and repairs
 ./scripts/n8n-ctl.sh help          # Display help message
 Makefile Commands
-A Makefile is provided to simplify common tasks:
+For convenience, use the provided Makefile to execute common tasks:
 
 makefile
 Copy
@@ -171,7 +193,7 @@ restorewc:
 
 help:
 	./scripts/n8n-ctl.sh help
-Run commands via:
+Run commands like so:
 
 bash
 Copy
@@ -179,14 +201,18 @@ make deploy
 make update
 # ... and so on.
 Troubleshooting & Logs
-All logs are stored in the logs/ directory.
-If a command fails, detailed error messages (with timestamps) are logged in n8n-ctl.log.
-Check these logs to diagnose issues.
+All logs are stored in the logs/ directory. In case of an error, detailed messages (with timestamps) are logged in n8n-ctl.log. Use these logs to diagnose and resolve issues.
+
 Contributing
 Contributions, bug reports, and feature requests are welcome!
 
 Fork the repository.
 Create a new branch for your feature or bug fix.
-Commit your changes with clear commit messages.
+Commit your changes with clear messages.
 Push to your fork and open a pull request.
-For more details, please check the Issues section or open a new issue.
+For more details, check the Issues section.
+
+License
+This project is licensed under the MIT License.
+
+<p align="center"> <em>Happy Deploying! 🚀</em> </p> ```
