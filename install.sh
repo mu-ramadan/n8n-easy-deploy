@@ -29,7 +29,7 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 # Define repository URL and target directory in the current working directory
-REPO_URL="https://github.com/yourusername/n8n-easy-deploy.git"
+REPO_URL="https://github.com/mu-ramadan/n8n-easy-deploy.git"
 TARGET_DIR="$PWD/n8n-easy-deploy"
 
 # Clone or update the repository
