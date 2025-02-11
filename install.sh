@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 # install.sh - Automated installer for n8n Easy Deploy
 #
-# This script clones the repository to a default location,
+# This script clones the repository into the current directory
+# (creates a folder "n8n-easy-deploy" in the current directory),
 # sets the necessary permissions, creates required directories,
 # and prompts the user to update their configuration if needed.
 #
 # Usage:
-#   chmod +x install.sh
-#   ./install.sh
+#   curl -sSL https://raw.githubusercontent.com/yourusername/n8n-easy-deploy/main/install.sh | sh
 #
-# After installation, follow the instructions to edit the config file
-# and then run the main control script:
-#   cd /opt/n8n-easy-deploy && ./scripts/n8n-ctl.sh
+# After installation, change to the cloned directory and run:
+#   ./scripts/n8n-ctl.sh
 
 set -Eeuo pipefail
 
@@ -25,39 +24,38 @@ if ! command -v git >/dev/null 2>&1; then
     exit 1
 fi
 
-# Define repository URL and target installation directory
+# Define repository URL and target directory in the current working directory
 REPO_URL="https://github.com/yourusername/n8n-easy-deploy.git"
-INSTALL_DIR="/opt/n8n-easy-deploy"
+TARGET_DIR="$PWD/n8n-easy-deploy"
 
 # Clone or update the repository
-if [ -d "$INSTALL_DIR" ]; then
-    echo "Repository already exists in $INSTALL_DIR."
+if [ -d "$TARGET_DIR" ]; then
+    echo "Repository already exists in $TARGET_DIR."
     read -rp "Do you want to update the repository? (y/n): " answer
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         echo "Updating repository..."
-        cd "$INSTALL_DIR" && git pull || { echo "Error: git pull failed."; exit 1; }
+        cd "$TARGET_DIR" && git pull || { echo "Error: git pull failed."; exit 1; }
     else
         echo "Skipping update. Installation will proceed with the existing repository."
     fi
 else
-    echo "Cloning repository to $INSTALL_DIR..."
-    sudo git clone "$REPO_URL" "$INSTALL_DIR" || { echo "Error: Cloning failed."; exit 1; }
+    echo "Cloning repository into $TARGET_DIR..."
+    git clone "$REPO_URL" "$TARGET_DIR" || { echo "Error: Cloning failed."; exit 1; }
 fi
 
-# Change ownership and set permissions for the installation directory
+# Set file permissions for the main control script
 echo "Setting file permissions..."
-sudo chown -R "$USER":"$USER" "$INSTALL_DIR"
-chmod +x "$INSTALL_DIR/scripts/n8n-ctl.sh"
+chmod +x "$TARGET_DIR/scripts/n8n-ctl.sh"
 
 # Create required directories if they don't exist
 echo "Creating backups and logs directories..."
-mkdir -p "$INSTALL_DIR/backups" "$INSTALL_DIR/logs"
+mkdir -p "$TARGET_DIR/backups" "$TARGET_DIR/logs"
 
 # Ensure configuration file exists
-CONFIG_FILE="$INSTALL_DIR/config/.env"
+CONFIG_FILE="$TARGET_DIR/config/.env"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Configuration file not found. Creating from sample (.env.example)..."
-    cp "$INSTALL_DIR/config/.env.example" "$CONFIG_FILE"
+    cp "$TARGET_DIR/config/.env.example" "$CONFIG_FILE"
     echo "Created $CONFIG_FILE."
     echo "Please review and update the configuration file with your settings."
 fi
@@ -65,6 +63,6 @@ fi
 echo "============================================"
 echo "Installation complete!"
 echo "To start n8n Easy Deploy, execute the following commands:"
-echo "  cd $INSTALL_DIR"
+echo "  cd $TARGET_DIR"
 echo "  ./scripts/n8n-ctl.sh"
 echo "============================================"
