@@ -1,0 +1,28 @@
+{{ if .SSL_CERT }}
+tls:
+  certificates:
+    - certFile: "{{ .SSL_CERT }}"
+      keyFile: "{{ .SSL_KEY }}"
+{{ else }}
+http:
+  routers:
+    n8n-router:
+      rule: "Host(`{{ .DOMAIN_NAME }}`)"
+      entryPoints:
+        - websecure
+      service: n8n-service
+      tls:
+        certResolver: myresolver
+{{ end }}
+http:
+  routers:
+    n8n-router:
+      rule: "Host(`{{ .DOMAIN_NAME }}`)"
+      entryPoints:
+        - websecure
+      service: n8n-service
+  services:
+    n8n-service:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:{{ .N8N_PORT }}"
