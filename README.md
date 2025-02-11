@@ -11,7 +11,7 @@
 
 Run this command in your terminal:
 
-**`curl -sSL https://raw.githubusercontent.com/mu-ramadan/N8N-Easy-Deploy/refs/heads/main/install.sh | bash`**
+**`curl -sSL https://raw.githubusercontent.com/mu-ramadan/n8n-easy-deploy/refs/heads/main/install.sh | bash`**
 
 
 **Important (After Installation):**
