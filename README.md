@@ -1,4 +1,3 @@
-<pre>
 # &#x1F680; n8n Easy Deploy
 
 **Deploy a self-hosted n8n instance with ONE COMMAND!**
@@ -85,4 +84,4 @@ cd /opt/n8n-easy-deploy
 
 MIT License - see [LICENSE](LICENSE).
 
-</pre>
+
