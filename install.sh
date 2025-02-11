@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 # install.sh - Automated installer for n8n Easy Deploy
 #
-# This script clones the repository into the current directory
-# (creates a folder "n8n-easy-deploy" in the current directory),
-# sets the necessary permissions, creates required directories,
-# and prompts the user to update their configuration if needed.
+# This script clones the repository into the current directory (as a folder named "n8n-easy-deploy"),
+# sets the necessary permissions, creates required directories, and prompts the user to update their configuration.
 #
-# Usage:
-#   curl -sSL https://raw.githubusercontent.com/yourusername/n8n-easy-deploy/main/install.sh | sh
+# To install, run:
+#   curl -sSL https://raw.githubusercontent.com/yourusername/n8n-easy-deploy/main/install.sh | bash
 #
-# After installation, change to the cloned directory and run:
-#   ./scripts/n8n-ctl.sh
+# If you need to run with sudo for parts of the installation, you can use:
+#   curl -sSL https://raw.githubusercontent.com/yourusername/n8n-easy-deploy/main/install.sh | sudo bash
+
+# Ensure the script is running under Bash
+if [ -z "$BASH_VERSION" ]; then
+  echo "This script must be run with Bash. Re-executing using bash..."
+  exec /usr/bin/env bash "$0" "$@"
+fi
 
 set -Eeuo pipefail
 
