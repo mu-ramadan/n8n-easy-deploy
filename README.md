@@ -2,7 +2,7 @@
 
 **Deploy a self-hosted n8n instance with ONE COMMAND!**
 
-[![n8n Logo](https://n8n.io/n8n-logo.svg)](https://n8n.io/)
+[![n8n Logo](https://pbs.twimg.com/profile_images/1536335358803251202/-gASF0c6_400x400.png)](https://n8n.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
