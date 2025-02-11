@@ -1,4 +1,4 @@
-<pre><code class="language-markdown">
+
 # &#x1F680; n8n Easy Deploy
 
 [![n8n Logo](https://n8n.io/n8n-logo.svg)](https://n8n.io/)
@@ -193,4 +193,4 @@ The `docker-compose.yml` file defines the services for your n8n deployment.  It 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-</code></pre>
+
