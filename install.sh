@@ -19,8 +19,7 @@ if [ -z "${BASH_VERSION:-}" ]; then
   exec /usr/bin/env bash "$0" "$@"
 fi
 
-# Exit immediately if a command exits with a non-zero status,
-# treat unset variables as errors, and ensure pipeline errors are caught.
+# Exit immediately on error, treat unset variables as errors, and ensure pipeline errors are caught.
 set -Eeuo pipefail
 IFS=$'\n\t'
 
@@ -115,8 +114,8 @@ fi
 if ! command -v caddy >/dev/null 2>&1; then
   wait_for_apt_lock
   run_step "Installing Caddy dependencies" "apt-get update -qq && apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg"
-  run_step "Adding Caddy GPG key" "mkdir -p /usr/share/keyrings && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | tee /usr/share/keyrings/caddy-stable-archive-keyring.gpg >/dev/null"
-  run_step "Adding Caddy repository" "echo 'deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main' | tee /etc/apt/sources.list.d/caddy-stable.list"
+  run_step "Adding Caddy GPG key" "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor > /usr/share/keyrings/caddy-stable-archive-keyring.gpg"
+  run_step "Adding Caddy repository" "echo 'deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main' > /etc/apt/sources.list.d/caddy-stable.list"
   wait_for_apt_lock
   run_step "Installing Caddy" "apt-get update -qq && apt-get install -y caddy"
 fi
