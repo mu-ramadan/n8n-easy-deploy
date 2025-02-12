@@ -114,8 +114,10 @@ fi
 if ! command -v caddy >/dev/null 2>&1; then
   wait_for_apt_lock
   run_step "Installing Caddy dependencies" "apt-get update -qq && apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg"
+  # Download and add the GPG key for Caddy.
   run_step "Adding Caddy GPG key" "curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor > /usr/share/keyrings/caddy-stable-archive-keyring.gpg"
-  run_step "Adding Caddy repository" "echo 'deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main' > /etc/apt/sources.list.d/caddy-stable.list"
+  # Add the repository with the architecture specification.
+  run_step "Adding Caddy repository" "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main' > /etc/apt/sources.list.d/caddy-stable.list"
   wait_for_apt_lock
   run_step "Installing Caddy" "apt-get update -qq && apt-get install -y caddy"
 fi
