@@ -1,0 +1,7 @@
+{
+    email {{ .LETSENCRYPT_EMAIL }}
+}
+
+{{ .DOMAIN_NAME }} {
+    reverse_proxy localhost:{{ .N8N_PORT }}
+}
