@@ -2,11 +2,13 @@
 # install.sh - Automated installer for n8n Easy Deploy
 #
 # This installer will:
-#   - Check for and install required packages: Git, Docker, Docker Compose, AWS CLI, Caddy, and unzip.
-#   - Clone the repository into a folder named "n8n-easy-deploy" in the current directory.
+#   - Check for and install required packages: Git, Docker, Docker Compose,
+#     AWS CLI, Caddy, and unzip.
+#   - Clone (or update) the repository into a folder named "n8n-easy-deploy"
+#     in the current directory.
 #   - Set necessary permissions and create required directories.
-#   - Prompt the user to update the configuration file (config/.env) with their desired settings.
-#   - Launch the main control script if the user chooses to.
+#   - Ensure a configuration file exists.
+#   - Optionally launch the main control script.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/mu-ramadan/n8n-easy-deploy/refs/heads/main/install.sh | sudo bash
@@ -18,35 +20,49 @@ if [ -z "${BASH_VERSION:-}" ]; then
 fi
 
 # Exit immediately if a command exits with a non-zero status,
-# treat unset variables as an error and exit immediately,
-# and ensure that errors in a pipeline cause the pipeline to fail.
+# treat unset variables as errors, and ensure pipeline errors are caught.
 set -Eeuo pipefail
 IFS=$'\n\t'
 
-# ------------------------------------------------------------------------------
-# Root Check
-# ------------------------------------------------------------------------------
+# Ensure the script is run as root.
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root. Please run with sudo."
   exit 1
 fi
 
 # ------------------------------------------------------------------------------
-# Function: wait_for_apt_lock
-#
-# Description:
-#   Waits for any active apt/dpkg process to release the lock.
+# Logging and Command Runner
 # ------------------------------------------------------------------------------
-wait_for_apt_lock() {
-  local lock_file="/var/lib/dpkg/lock-frontend"
-  echo "Checking for apt/dpkg lock..."
-  while fuser "$lock_file" >/dev/null 2>&1; do
-    echo "Another apt/dpkg process is running. Waiting for the lock to be released..."
-    sleep 5
-  done
-  echo "apt/dpkg lock released."
+LOG_FILE="/tmp/n8n-easy-deploy-install.log"
+: > "$LOG_FILE"  # Clear (or create) the log file
+
+# run_step prints a brief progress message, runs the given command (using eval),
+# and prints "Done" if successful or "Failed" if not.
+run_step() {
+  local description="$1"
+  local command="$2"
+  echo -n "$description... "
+  if eval "$command" >> "$LOG_FILE" 2>&1; then
+    echo "Done."
+  else
+    echo "Failed. Please check the log file at $LOG_FILE for details."
+    exit 1
+  fi
 }
 
+# wait_for_apt_lock waits for any active apt/dpkg process to release the lock.
+wait_for_apt_lock() {
+  local lock_file="/var/lib/dpkg/lock-frontend"
+  echo -n "Waiting for apt/dpkg lock to be released... "
+  while fuser "$lock_file" >/dev/null 2>&1; do
+    sleep 5
+  done
+  echo "Done."
+}
+
+# ------------------------------------------------------------------------------
+# Display Header
+# ------------------------------------------------------------------------------
 echo "============================================"
 echo "          n8n Easy Deploy Installer"
 echo "============================================"
@@ -61,60 +77,48 @@ if ! command -v git >/dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------------------------------
-# Check for Docker; install if missing
+# Install Docker (if missing)
 # ------------------------------------------------------------------------------
 if ! command -v docker >/dev/null 2>&1; then
-  echo "Docker not found. Installing Docker..."
-  curl -fsSL https://get.docker.com | sh
-  # Add the non-root user (if available) to the docker group so they can run Docker without sudo.
-  # When running via sudo, SUDO_USER holds the actual username.
+  run_step "Installing Docker" "curl -fsSL https://get.docker.com | sh"
+  # Add the non-root user (if available) to the docker group.
   user_to_add="${SUDO_USER:-$USER}"
-  usermod -aG docker "$user_to_add" && echo "Added user '$user_to_add' to the Docker group."
+  run_step "Adding user '$user_to_add' to Docker group" "usermod -aG docker $user_to_add"
 fi
 
 # ------------------------------------------------------------------------------
-# Check for Docker Compose (plugin); install if missing
+# Install Docker Compose Plugin (if missing)
 # ------------------------------------------------------------------------------
 if ! command -v docker-compose >/dev/null 2>&1; then
-  echo "Docker Compose not found. Installing Docker Compose plugin..."
   wait_for_apt_lock
-  apt-get update -qq
-  apt-get install -y docker-compose-plugin
+  run_step "Installing Docker Compose plugin" "apt-get update -qq && apt-get install -y docker-compose-plugin"
 fi
 
 # ------------------------------------------------------------------------------
-# Check for unzip; install if missing (needed for AWS CLI)
+# Install unzip (if missing; needed for AWS CLI)
 # ------------------------------------------------------------------------------
 if ! command -v unzip >/dev/null 2>&1; then
-  echo "unzip not found. Installing unzip..."
   wait_for_apt_lock
-  apt-get update -qq
-  apt-get install -y unzip
+  run_step "Installing unzip" "apt-get update -qq && apt-get install -y unzip"
 fi
 
 # ------------------------------------------------------------------------------
-# Check for AWS CLI; install if missing
+# Install AWS CLI (if missing)
 # ------------------------------------------------------------------------------
 if ! command -v aws >/dev/null 2>&1; then
-  echo "AWS CLI not found. Installing AWS CLI..."
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  unzip awscliv2.zip
-  ./aws/install
-  rm -rf awscliv2.zip aws
+  run_step "Installing AWS CLI" "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\" && unzip awscliv2.zip && ./aws/install && rm -rf awscliv2.zip aws"
 fi
 
 # ------------------------------------------------------------------------------
-# Check for Caddy; install if missing (Ubuntu/Debian)
+# Install Caddy (if missing)
 # ------------------------------------------------------------------------------
 if ! command -v caddy >/dev/null 2>&1; then
-  echo "Caddy not found. Installing Caddy..."
   wait_for_apt_lock
-  apt-get update -qq
-  apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | apt-key add -
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
-  apt-get update -qq
-  apt-get install -y caddy
+  run_step "Installing Caddy dependencies" "apt-get update -qq && apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg"
+  run_step "Adding Caddy GPG key" "mkdir -p /usr/share/keyrings && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | tee /usr/share/keyrings/caddy-stable-archive-keyring.gpg >/dev/null"
+  run_step "Adding Caddy repository" "echo 'deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main' | tee /etc/apt/sources.list.d/caddy-stable.list"
+  wait_for_apt_lock
+  run_step "Installing Caddy" "apt-get update -qq && apt-get install -y caddy"
 fi
 
 echo ""
@@ -128,37 +132,30 @@ REPO_URL="https://github.com/mu-ramadan/n8n-easy-deploy.git"
 TARGET_DIR="$PWD/n8n-easy-deploy"
 
 if [ -d "$TARGET_DIR" ]; then
-    echo "Repository already exists in $TARGET_DIR."
-    read -rp "Do you want to update the repository? (y/n): " answer
-    if [[ "$answer" =~ ^[Yy]$ ]]; then
-        echo "Updating repository..."
-        cd "$TARGET_DIR" && git pull || { echo "Error: git pull failed."; exit 1; }
-    else
-        echo "Skipping update. Installation will proceed with the existing repository."
-    fi
+  echo -n "Repository already exists in $TARGET_DIR. Do you want to update it? (y/n): "
+  read -r answer
+  if [[ "$answer" =~ ^[Yy]$ ]]; then
+    run_step "Updating repository" "cd \"$TARGET_DIR\" && git pull"
+  else
+    echo "Skipping repository update."
+  fi
 else
-    echo "Cloning repository into $TARGET_DIR..."
-    git clone "$REPO_URL" "$TARGET_DIR" || { echo "Error: Cloning failed."; exit 1; }
+  run_step "Cloning repository" "git clone \"$REPO_URL\" \"$TARGET_DIR\""
 fi
 
 # ------------------------------------------------------------------------------
 # Set Permissions and Create Directories
 # ------------------------------------------------------------------------------
-echo "Setting file permissions for the control script..."
-chmod +x "$TARGET_DIR/scripts/n8n-ctl.sh"
-
-echo "Creating backups and logs directories..."
-mkdir -p "$TARGET_DIR/backups" "$TARGET_DIR/logs"
+run_step "Setting file permissions for control script" "chmod +x \"$TARGET_DIR/scripts/n8n-ctl.sh\""
+run_step "Creating backups and logs directories" "mkdir -p \"$TARGET_DIR/backups\" \"$TARGET_DIR/logs\""
 
 # ------------------------------------------------------------------------------
 # Ensure Configuration File Exists
 # ------------------------------------------------------------------------------
 CONFIG_FILE="$TARGET_DIR/config/.env"
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Configuration file not found. Creating from sample (.env.example)..."
-    cp "$TARGET_DIR/config/.env.example" "$CONFIG_FILE"
-    echo "Created $CONFIG_FILE."
-    echo "Please review and update the configuration file with your settings (e.g., DOMAIN_NAME and LETSENCRYPT_EMAIL)."
+  run_step "Creating configuration file from sample" "cp \"$TARGET_DIR/config/.env.example\" \"$CONFIG_FILE\""
+  echo "Please review and update the configuration file ($CONFIG_FILE) with your settings (e.g., DOMAIN_NAME and LETSENCRYPT_EMAIL)."
 fi
 
 echo ""
@@ -169,9 +166,10 @@ echo "  cd $TARGET_DIR"
 echo "  ./scripts/n8n-ctl.sh"
 echo "============================================"
 echo ""
-read -rp "Would you like to launch the n8n Easy Deploy menu now? (y/n): " launch_choice
+echo -n "Would you like to launch the n8n Easy Deploy menu now? (y/n): "
+read -r launch_choice
 if [[ "$launch_choice" =~ ^[Yy]$ ]]; then
-    cd "$TARGET_DIR" && ./scripts/n8n-ctl.sh
+  cd "$TARGET_DIR" && ./scripts/n8n-ctl.sh
 else
-    echo "You can start n8n Easy Deploy later by navigating to $TARGET_DIR and running ./scripts/n8n-ctl.sh"
+  echo "You can start n8n Easy Deploy later by navigating to $TARGET_DIR and running ./scripts/n8n-ctl.sh"
 fi
