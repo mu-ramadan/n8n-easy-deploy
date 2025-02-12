@@ -2,75 +2,131 @@
 # install.sh - Automated installer for n8n Easy Deploy
 #
 # This installer will:
-#   - Check for and install required packages: Git, Docker, Docker Compose, AWS CLI, and Caddy.
+#   - Check for and install required packages: Git, Docker, Docker Compose, AWS CLI, Caddy, and unzip.
 #   - Clone the repository into a folder named "n8n-easy-deploy" in the current directory.
 #   - Set necessary permissions and create required directories.
 #   - Prompt the user to update the configuration file (config/.env) with their desired settings.
 #   - Launch the main control script if the user chooses to.
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/mu-ramadan/n8n-easy-deploy/refs/heads/main/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/mu-ramadan/n8n-easy-deploy/refs/heads/main/install.sh | sudo bash
 
 # Ensure the script is running under Bash
-if [ -z "$BASH_VERSION" ]; then
+if [ -z "${BASH_VERSION:-}" ]; then
   echo "This script must be run with Bash. Re-executing using bash..."
   exec /usr/bin/env bash "$0" "$@"
 fi
 
+# Exit immediately if a command exits with a non-zero status,
+# treat unset variables as an error and exit immediately,
+# and ensure that errors in a pipeline cause the pipeline to fail.
 set -Eeuo pipefail
+IFS=$'\n\t'
+
+# ------------------------------------------------------------------------------
+# Root Check
+# ------------------------------------------------------------------------------
+if [ "$EUID" -ne 0 ]; then
+  echo "This script must be run as root. Please run with sudo."
+  exit 1
+fi
+
+# ------------------------------------------------------------------------------
+# Function: wait_for_apt_lock
+#
+# Description:
+#   Waits for any active apt/dpkg process to release the lock.
+# ------------------------------------------------------------------------------
+wait_for_apt_lock() {
+  local lock_file="/var/lib/dpkg/lock-frontend"
+  echo "Checking for apt/dpkg lock..."
+  while fuser "$lock_file" >/dev/null 2>&1; do
+    echo "Another apt/dpkg process is running. Waiting for the lock to be released..."
+    sleep 5
+  done
+  echo "apt/dpkg lock released."
+}
 
 echo "============================================"
 echo "          n8n Easy Deploy Installer"
 echo "============================================"
 echo ""
 
+# ------------------------------------------------------------------------------
 # Check for Git
+# ------------------------------------------------------------------------------
 if ! command -v git >/dev/null 2>&1; then
   echo "Git is not installed. Please install Git and re-run this script."
   exit 1
 fi
 
+# ------------------------------------------------------------------------------
 # Check for Docker; install if missing
+# ------------------------------------------------------------------------------
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker not found. Installing Docker..."
   curl -fsSL https://get.docker.com | sh
-  sudo usermod -aG docker "$USER"
+  # Add the non-root user (if available) to the docker group so they can run Docker without sudo.
+  # When running via sudo, SUDO_USER holds the actual username.
+  user_to_add="${SUDO_USER:-$USER}"
+  usermod -aG docker "$user_to_add" && echo "Added user '$user_to_add' to the Docker group."
 fi
 
-# Check for Docker Compose (plugin)
+# ------------------------------------------------------------------------------
+# Check for Docker Compose (plugin); install if missing
+# ------------------------------------------------------------------------------
 if ! command -v docker-compose >/dev/null 2>&1; then
   echo "Docker Compose not found. Installing Docker Compose plugin..."
-  sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+  wait_for_apt_lock
+  apt-get update -qq
+  apt-get install -y docker-compose-plugin
 fi
 
+# ------------------------------------------------------------------------------
+# Check for unzip; install if missing (needed for AWS CLI)
+# ------------------------------------------------------------------------------
+if ! command -v unzip >/dev/null 2>&1; then
+  echo "unzip not found. Installing unzip..."
+  wait_for_apt_lock
+  apt-get update -qq
+  apt-get install -y unzip
+fi
+
+# ------------------------------------------------------------------------------
 # Check for AWS CLI; install if missing
+# ------------------------------------------------------------------------------
 if ! command -v aws >/dev/null 2>&1; then
   echo "AWS CLI not found. Installing AWS CLI..."
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip awscliv2.zip
-  sudo ./aws/install
+  ./aws/install
   rm -rf awscliv2.zip aws
 fi
 
+# ------------------------------------------------------------------------------
 # Check for Caddy; install if missing (Ubuntu/Debian)
+# ------------------------------------------------------------------------------
 if ! command -v caddy >/dev/null 2>&1; then
   echo "Caddy not found. Installing Caddy..."
-  sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo apt-key add -
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-  sudo apt update
-  sudo apt install caddy -y
+  wait_for_apt_lock
+  apt-get update -qq
+  apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | apt-key add -
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+  apt-get update -qq
+  apt-get install -y caddy
 fi
 
 echo ""
 echo "All required packages are installed."
 echo ""
 
-# Define repository URL and target directory in the current working directory
+# ------------------------------------------------------------------------------
+# Clone or Update Repository
+# ------------------------------------------------------------------------------
 REPO_URL="https://github.com/mu-ramadan/n8n-easy-deploy.git"
 TARGET_DIR="$PWD/n8n-easy-deploy"
 
-# Clone or update the repository
 if [ -d "$TARGET_DIR" ]; then
     echo "Repository already exists in $TARGET_DIR."
     read -rp "Do you want to update the repository? (y/n): " answer
@@ -85,27 +141,30 @@ else
     git clone "$REPO_URL" "$TARGET_DIR" || { echo "Error: Cloning failed."; exit 1; }
 fi
 
-# Set file permissions for the main control script
-echo "Setting file permissions..."
+# ------------------------------------------------------------------------------
+# Set Permissions and Create Directories
+# ------------------------------------------------------------------------------
+echo "Setting file permissions for the control script..."
 chmod +x "$TARGET_DIR/scripts/n8n-ctl.sh"
 
-# Create required directories if they don't exist
 echo "Creating backups and logs directories..."
 mkdir -p "$TARGET_DIR/backups" "$TARGET_DIR/logs"
 
-# Ensure configuration file exists
+# ------------------------------------------------------------------------------
+# Ensure Configuration File Exists
+# ------------------------------------------------------------------------------
 CONFIG_FILE="$TARGET_DIR/config/.env"
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Configuration file not found. Creating from sample (.env.example)..."
     cp "$TARGET_DIR/config/.env.example" "$CONFIG_FILE"
     echo "Created $CONFIG_FILE."
-    echo "Please review and update the configuration file with your settings, including DOMAIN_NAME and LETSENCRYPT_EMAIL."
+    echo "Please review and update the configuration file with your settings (e.g., DOMAIN_NAME and LETSENCRYPT_EMAIL)."
 fi
 
 echo ""
 echo "============================================"
 echo "Installation complete!"
-echo "To start n8n Easy Deploy, run:"
+echo "To start n8n Easy Deploy, run the following commands:"
 echo "  cd $TARGET_DIR"
 echo "  ./scripts/n8n-ctl.sh"
 echo "============================================"
