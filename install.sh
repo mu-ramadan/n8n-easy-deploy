@@ -3,28 +3,20 @@
 #
 # This script automates the installation of n8n Easy Deploy.
 # It will:
-# 1. Check for an interactive terminal.
-# 2. Clone the repository from GitHub (if not already present) into /opt/n8n-easy-deploy.
-# 3. Set proper permissions on the main script.
-# 4. Create a .env file from .env.example if it doesn't exist.
-# 5. Open the .env file for editing.
-# 6. Launch the main interactive GUI.
+# 1. Clone the repository from GitHub (if not already present) to /opt/n8n-easy-deploy.
+# 2. Set proper permissions on the main script.
+# 3. Create a .env file from .env.example if it doesn't exist.
+# 4. Open the .env file for editing using the default editor (with /dev/tty for interactive input).
+# 5. Launch the main interactive GUI script.
 #
-# Usage (run as root):
+# Usage (run as root via curl):
 # sudo curl -sSL https://raw.githubusercontent.com/mu-ramadan/n8n-easy-deploy/refs/heads/main/install.sh | sudo bash
 
 set -Eeuo pipefail
 
-# Check for interactive terminal
-if [ ! -t 0 ]; then
-  echo "Error: This script requires an interactive terminal."
-  echo "Please run it with an interactive shell (e.g., sudo bash -i install.sh)."
-  exit 1
-fi
-
 # Configuration
 REPO_URL="https://github.com/mu-ramadan/n8n-easy-deploy.git"
-REPO_DIR="/opt/n8n-easy-deploy"  # Repository will be cloned here
+REPO_DIR="/opt/n8n-easy-deploy"
 
 echo "n8n Easy Deploy Installer"
 echo "=========================="
@@ -49,11 +41,11 @@ if [ ! -f ".env" ]; then
     chmod 600 .env
 fi
 
-# Open the .env file for editing
-echo "Opening .env file for editing. Please update it with your desired settings."
-# Use the default editor ($EDITOR) or fallback to nano
+# Open the .env file for editing using the default editor.
+# Using /dev/tty ensures that the editor gets input from the terminal rather than the pipe.
+echo "Opening .env file for editing. Please update it with your desired settings and then save and exit the editor."
 EDITOR="${EDITOR:-nano}"
-$EDITOR .env
+$EDITOR .env < /dev/tty
 
 # Confirm with the user that editing is complete
 read -rp "Have you saved your changes to .env? (y/N): " CONFIRM
