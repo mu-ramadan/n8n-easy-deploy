@@ -1,0 +1,8 @@
+{
+    email youremail@example.com
+}
+
+# Base configuration; this file can be updated automatically by the deploy script.
+your.domain.com {
+    reverse_proxy n8n:5678
+}
