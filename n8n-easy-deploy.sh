@@ -53,7 +53,8 @@ show_menu() {
     echo "5. Check and Repair"
     echo "6. Secure and Harden Server"
     echo "7. Exit"
-    read -rp "Choose an option (1-7): " choice
+    # Read input from /dev/tty to force interactive behavior
+    read -rp "Choose an option (1-7): " choice </dev/tty
     case $choice in
       1) deploy ;;
       2) update_instance ;;

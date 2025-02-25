@@ -5,7 +5,7 @@
 # This script automates the complete installation of n8n Easy Deploy.
 # It will:
 # 1. Check for and install all required software (Git, Docker, Docker Compose, AWS CLI).
-# 2. Import the missing GPG key for the Caddy repository to avoid signature errors.
+# 2. Import the missing GPG key for the Caddy repository using the new keyring method.
 # 3. Remove any existing repository at /opt/n8n-easy-deploy and clone the repository from GitHub.
 # 4. Set proper permissions on the main script.
 # 5. Create a .env file from .env.example if it doesn't exist.
@@ -49,8 +49,9 @@ fi
 # Docker Compose
 if ! command -v docker-compose >/dev/null 2>&1; then
     echo "Docker Compose not found. Installing Docker Compose plugin..."
+    # Import the Caddy GPG key using the new method.
     echo "Importing Caddy GPG key to resolve signature errors..."
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo apt-key add -
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.gpg > /dev/null
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
 else
     echo "Docker Compose is already installed."
