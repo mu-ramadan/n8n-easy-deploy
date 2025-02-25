@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # n8n Easy Deploy – A Simple and Secure Deployment GUI for n8n
 #
-# After cloning this repository, copy .env.example to .env and edit it with your desired settings,
-# including USER_EMAIL for auto SSL renewal and AWS credentials if needed.
-#
-# This script launches an interactive GUI to deploy, update, backup, restore, diagnose/repair,
-# secure/harden your n8n instance, or deploy locally without domain configuration.
+# This script launches an interactive GUI to deploy, update, backup, restore,
+# diagnose/repair, and secure/harden your n8n instance.
 #
 # Prerequisites:
-#   - Docker, Docker Compose, and AWS CLI must be installed.
-#   - Caddy is used for domain/SSL but will be skipped in local deployments.
+#   - Docker, Docker Compose, AWS CLI, etc. must be installed.
+#   - Caddy is used for domain/SSL (skipped in local deployment).
 #   - Sudo privileges are required for some operations.
 #
 # It is recommended to run this script through ShellCheck.

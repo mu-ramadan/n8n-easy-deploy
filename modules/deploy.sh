@@ -25,3 +25,12 @@ deploy_blue_green() {
   log "Blue-green deployment stub complete. (Simulating update.)"
   docker compose -f "$COMPOSE_FILE" up -d --force-recreate
 }
+
+deploy_local() {
+  check_dependencies
+  init_config
+  log "Starting local n8n deployment (without domain/SSL)..."
+  # In local mode, we simply bring up the n8n stack (n8n, postgres, redis)
+  docker compose -f "$COMPOSE_FILE" up -d n8n postgres redis
+  log "Local deployment complete! Access n8n at: http://localhost:$(grep '^N8N_PORT=' "$ENV_FILE" | cut -d= -f2)"
+}
