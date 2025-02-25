@@ -10,7 +10,8 @@ check_aws_credentials() {
     log "AWS credentials file found at $HOME/.aws/credentials."
   else
     log "AWS credentials not found. Launching 'aws configure'..."
-    aws configure
+    # Force interactive input from /dev/tty
+    aws configure < /dev/tty
     if [ $? -ne 0 ]; then
       log "Error: AWS configuration failed. Please configure your AWS credentials."
       exit 1
