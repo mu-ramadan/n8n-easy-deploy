@@ -14,7 +14,7 @@ trap notify_error ERR
 trap 'log "Interrupted by signal"; exit 130' SIGINT SIGTERM
 
 check_dependencies() {
-  log "Checking dependencies..."
+  log "Checking required software..."
   if ! command -v docker >/dev/null 2>&1; then
     log "Docker not found. Installing Docker..."
     curl -fsSL https://get.docker.com | sh
@@ -22,9 +22,8 @@ check_dependencies() {
   fi
   if ! command -v docker-compose >/dev/null 2>&1; then
     log "Docker Compose not found. Installing Docker Compose plugin..."
-    # Import Caddy GPG key to fix signature errors
     log "Importing Caddy GPG key..."
-    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo apt-key add -
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.gpg > /dev/null
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
   fi
   if ! command -v aws >/dev/null 2>&1; then

@@ -8,7 +8,7 @@ restore() {
   local AWS_BUCKET
   AWS_BUCKET=$(grep '^AWS_BUCKET=' "$ENV_FILE" | cut -d= -f2)
   aws s3 ls "s3://$AWS_BUCKET/n8n-backups/" | awk '{print $4}'
-  read -rp "Enter backup filename to restore: " backup_file
+  read -rp "Enter backup filename to restore: " backup_file </dev/tty
   log "Restoring backup $backup_file..."
   docker compose -f "$COMPOSE_FILE" down
   aws s3 cp "s3://$AWS_BUCKET/n8n-backups/$backup_file" "$BACKUP_DIR/"
@@ -21,7 +21,7 @@ restore() {
     current_version=$(docker compose -f "$COMPOSE_FILE" exec -T n8n n8n --version 2>/dev/null | tr -d '\r')
     if [ "$backup_version" != "$current_version" ]; then
       log "Version mismatch: Backup version is $backup_version but current n8n version is $current_version."
-      read -rp "Do you want to update your n8n instance to version $backup_version? (y/N): " confirm
+      read -rp "Do you want to update your n8n instance to version $backup_version? (y/N): " confirm </dev/tty
       if [[ "$confirm" =~ ^[Yy]$ ]]; then
         log "Updating docker-compose file to use n8nio/n8n:${backup_version}..."
         sudo sed -i "s|n8nio/n8n:.*|n8nio/n8n:${backup_version}|" "$COMPOSE_FILE"

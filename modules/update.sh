@@ -50,7 +50,7 @@ update_instance() {
     echo "1. Trigger manual update now"
     echo "2. Disable auto update"
     echo "3. Return to main menu"
-    read -rp "Choose an option (1-3): " choice
+    read -rp "Choose an option (1-3): " choice </dev/tty
     case $choice in
       1) log "Triggering manual update (blue-green deployment)..." && deploy_blue_green ;;
       2) disable_persistent_autoupdate ;;
@@ -63,7 +63,7 @@ update_instance() {
     echo "1. Trigger manual update now"
     echo "2. Enable auto update (persistent mode)"
     echo "3. Return to main menu"
-    read -rp "Choose an option (1-3): " choice
+    read -rp "Choose an option (1-3): " choice </dev/tty
     case $choice in
       1) log "Triggering manual update (blue-green deployment)..." && deploy_blue_green ;;
       2) setup_persistent_autoupdate ;;

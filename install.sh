@@ -49,7 +49,6 @@ fi
 # Docker Compose
 if ! command -v docker-compose >/dev/null 2>&1; then
     echo "Docker Compose not found. Installing Docker Compose plugin..."
-    # Import the Caddy GPG key using the new method.
     echo "Importing Caddy GPG key to resolve signature errors..."
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.gpg > /dev/null
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin

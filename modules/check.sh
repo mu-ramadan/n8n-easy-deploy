@@ -5,7 +5,7 @@
 check_and_repair() {
   log "Starting check and repair process..."
   
-  # 1. .env File Check & Permissions
+  # .env File Check & Permissions
   if [ ! -f "$ENV_FILE" ]; then
     log "Error: .env file not found in $CONFIG_DIR."
   else
@@ -20,7 +20,7 @@ check_and_repair() {
     fi
   fi
   
-  # 2. Docker Check
+  # Docker Check
   if ! docker info >/dev/null 2>&1; then
     log "Docker is not running. Attempting to start Docker..."
     sudo systemctl start docker && log "Docker started."
@@ -28,7 +28,7 @@ check_and_repair() {
     log "Docker is running."
   fi
   
-  # 3. n8n Container Check
+  # n8n Container Check
   if ! docker compose -f "$COMPOSE_FILE" ps | grep -q n8n; then
     log "n8n container is not running. Attempting to start containers..."
     docker compose -f "$COMPOSE_FILE" up -d && log "Containers started."
@@ -36,7 +36,7 @@ check_and_repair() {
     log "n8n container is running."
   fi
   
-  # 4. Caddy Check (if DOMAIN_NAME is set)
+  # Caddy Check (if DOMAIN_NAME is set)
   local DOMAIN
   DOMAIN=$(grep '^DOMAIN_NAME=' "$ENV_FILE" | cut -d= -f2 || echo "")
   if [ -n "$DOMAIN" ]; then
@@ -55,12 +55,12 @@ check_and_repair() {
     log "No DOMAIN_NAME defined. Skipping Caddy checks."
   fi
   
-  # 5. Persistent Auto-Update Status Check
+  # Persistent Auto-Update Status Check
   local auto_status
   auto_status=$( [ -f "$CONFIG_DIR/auto_update_status.txt" ] && cat "$CONFIG_DIR/auto_update_status.txt" || echo "disabled" )
   log "Persistent auto-update service status: $auto_status."
   
-  # 6. AWS S3 Connectivity Check
+  # AWS S3 Connectivity Check
   local AWS_BUCKET
   AWS_BUCKET=$(grep '^AWS_BUCKET=' "$ENV_FILE" | cut -d= -f2)
   if [ -n "$AWS_BUCKET" ]; then
@@ -72,7 +72,7 @@ check_and_repair() {
     fi
   fi
   
-  # 7. AWS Credentials Check
+  # AWS Credentials Check
   check_aws_credentials
   
   log "Check and repair process completed."

@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 # n8n Easy Deploy – A Simple and Secure Deployment GUI for n8n
 #
-# This script launches an interactive GUI to deploy, update, backup, restore, diagnose/repair,
-# and secure/harden your n8n instance.
+# After cloning this repository, copy .env.example to .env and edit it with your desired settings,
+# including USER_EMAIL for auto SSL renewal and AWS credentials if needed.
 #
-# It is intended to run in an interactive terminal.
+# This script launches an interactive GUI to deploy, update, backup, restore, diagnose/repair,
+# secure/harden your n8n instance, or deploy locally without domain configuration.
 #
 # Prerequisites:
-#   - Docker, Docker Compose, AWS CLI, etc. must be installed.
+#   - Docker, Docker Compose, and AWS CLI must be installed.
+#   - Caddy is used for domain/SSL but will be skipped in local deployments.
 #   - Sudo privileges are required for some operations.
 #
-# It is recommended to run this script through ShellCheck to catch subtle shell issues.
+# It is recommended to run this script through ShellCheck.
 
 set -Eeuo pipefail
 
@@ -34,12 +36,10 @@ for module in common.sh config.sh deploy.sh update.sh backup.sh restore.sh check
 done
 
 #######################################
-# Function: show_menu
-# Displays an interactive menu and handles user input.
+# Interactive Menu for Operations.
 #######################################
 show_menu() {
   while true; do
-    # Clear the terminal
     tput reset
     echo -e "\n▓ n8n Easy Deploy ▓"
     echo "IMPORTANT: Please ensure you have edited $ENV_FILE with your desired settings."
@@ -49,39 +49,20 @@ show_menu() {
     echo "4. Restore Backup"
     echo "5. Check and Repair"
     echo "6. Secure and Harden Server"
-    echo "7. Exit"
-    
-    # Read input from /dev/tty for true interactivity
-    read -rp "Choose an option (1-7): " choice </dev/tty
-
+    echo "7. Local Deployment (No Domain)"
+    echo "8. Exit"
+    read -rp "Choose an option (1-8): " choice </dev/tty
     case "$choice" in
-      1)
-        deploy || { log "Deployment failed."; sleep 2; }
-        ;;
-      2)
-        update_instance || { log "Update failed."; sleep 2; }
-        ;;
-      3)
-        backup || { log "Backup failed."; sleep 2; }
-        ;;
-      4)
-        restore || { log "Restore failed."; sleep 2; }
-        ;;
-      5)
-        check_and_repair || { log "Check and repair encountered errors."; sleep 2; }
-        ;;
-      6)
-        secure_server || { log "Security hardening failed."; sleep 2; }
-        ;;
-      7)
-        log "Exiting n8n Easy Deploy."
-        exit 0
-        ;;
-      *)
-        echo "Invalid option. Please try again." && sleep 2
-        ;;
+      1) deploy || { log "Deployment failed."; sleep 2; } ;;
+      2) update_instance || { log "Update failed."; sleep 2; } ;;
+      3) backup || { log "Backup failed."; sleep 2; } ;;
+      4) restore || { log "Restore failed."; sleep 2; } ;;
+      5) check_and_repair || { log "Check and repair encountered errors."; sleep 2; } ;;
+      6) secure_server || { log "Security hardening failed."; sleep 2; } ;;
+      7) deploy_local || { log "Local deployment failed."; sleep 2; } ;;
+      8) log "Exiting n8n Easy Deploy." && exit 0 ;;
+      *) echo "Invalid option. Try again." && sleep 2 ;;
     esac
-
     echo "Press Enter to return to the menu..." && read -r </dev/tty
   done
 }
