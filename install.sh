@@ -49,7 +49,6 @@ fi
 # Docker Compose
 if ! command -v docker-compose >/dev/null 2>&1; then
     echo "Docker Compose not found. Installing Docker Compose plugin..."
-    # Import the Caddy GPG key to fix the NO_PUBKEY error
     echo "Importing Caddy GPG key to resolve signature errors..."
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo apt-key add -
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
@@ -69,7 +68,7 @@ else
 fi
 
 # ---------------------------
-# Clone (Override) the Repository
+# Override Repository
 # ---------------------------
 if [ -d "$REPO_DIR" ]; then
     echo "Repository already exists at $REPO_DIR. Overriding with a fresh clone..."
@@ -100,7 +99,6 @@ echo "Opening .env file for editing. Please update it with your desired settings
 EDITOR="${EDITOR:-nano}"
 $EDITOR .env < /dev/tty
 
-# Confirm that editing is complete
 read -rp "Have you saved your changes to .env? (y/N): " CONFIRM < /dev/tty
 if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
     echo "Please edit .env and run this script again."

@@ -22,6 +22,9 @@ check_dependencies() {
   fi
   if ! command -v docker-compose >/dev/null 2>&1; then
     log "Docker Compose not found. Installing Docker Compose plugin..."
+    # Import Caddy GPG key to fix signature errors
+    log "Importing Caddy GPG key..."
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo apt-key add -
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
   fi
   if ! command -v aws >/dev/null 2>&1; then

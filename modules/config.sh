@@ -27,6 +27,7 @@ init_config() {
     fi
   fi
   validate_env
+
   if [ ! -f "$COMPOSE_FILE" ]; then
     log "Generating docker-compose.yml file..."
     cat <<'EOF' > "$COMPOSE_FILE"

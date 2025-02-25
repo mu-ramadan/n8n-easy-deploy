@@ -17,7 +17,8 @@
 set -Eeuo pipefail
 
 # Global configuration variables
-CONFIG_DIR="$HOME/n8n-ctl"
+# Use the repository directory as the configuration directory
+CONFIG_DIR="$(dirname "$0")"
 ENV_FILE="$CONFIG_DIR/.env"
 ENV_TEMPLATE="$CONFIG_DIR/.env.example"
 BACKUP_DIR="$CONFIG_DIR/backups"
@@ -26,16 +27,16 @@ LOG_FILE="$CONFIG_DIR/n8n-ctl.log"
 RETENTION_COUNT=10
 
 # Source modular scripts
-source "$(dirname "$0")/modules/common.sh"
-source "$(dirname "$0")/modules/config.sh"
-source "$(dirname "$0")/modules/deploy.sh"
-source "$(dirname "$0")/modules/update.sh"
-source "$(dirname "$0")/modules/backup.sh"
-source "$(dirname "$0")/modules/restore.sh"
-source "$(dirname "$0")/modules/check.sh"
-source "$(dirname "$0")/modules/caddy.sh"
-source "$(dirname "$0")/modules/aws.sh"
-source "$(dirname "$0")/modules/security.sh"
+source "$CONFIG_DIR/modules/common.sh"
+source "$CONFIG_DIR/modules/config.sh"
+source "$CONFIG_DIR/modules/deploy.sh"
+source "$CONFIG_DIR/modules/update.sh"
+source "$CONFIG_DIR/modules/backup.sh"
+source "$CONFIG_DIR/modules/restore.sh"
+source "$CONFIG_DIR/modules/check.sh"
+source "$CONFIG_DIR/modules/caddy.sh"
+source "$CONFIG_DIR/modules/aws.sh"
+source "$CONFIG_DIR/modules/security.sh"
 
 #######################################
 # Interactive Menu for Operations.
