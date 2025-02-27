@@ -7,19 +7,44 @@ services:
     ports:
       - "0.0.0.0:${N8N_PORT}:${N8N_PORT}"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - DB_TYPE=${DB_TYPE}
+      - DB_POSTGRESDB_HOST=${DB_HOST}
+      - DB_POSTGRESDB_PORT=${DB_PORT}
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASS}
+      - DB_POSTGRESDB_DATABASE=${DB_NAME}
+      - EXECUTIONS_MODE=${EXECUTIONS_MODE}
+      - QUEUE_MODE=${QUEUE_MODE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - NODE_FUNCTION_ALLOW_EXTERNAL=${NODE_FUNCTION_ALLOW_EXTERNAL}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - SSL_CERT=${SSL_CERT}
+      - SSL_KEY=${SSL_KEY}
+      - USER_EMAIL=${USER_EMAIL}
+      - UPDATE_INTERVAL=${UPDATE_INTERVAL}
+      - EXECUTIONS_TIMEOUT=${EXECUTIONS_TIMEOUT}
+      - WEBHOOK_TUNNEL_URL=${WEBHOOK_TUNNEL_URL}
 
   postgres:
     image: postgres:16-alpine
     env_file:
       - .env
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s

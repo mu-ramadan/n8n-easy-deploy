@@ -3,18 +3,40 @@
 # Functions for initializing configuration and validating environment variables.
 
 validate_env() {
-  local var
-  for var in N8N_PORT DB_USER DB_PASS AWS_BUCKET; do
+  local required_vars=(
+    N8N_PORT
+    N8N_ENCRYPTION_KEY
+    DB_TYPE
+    DB_HOST
+    DB_PORT
+    DB_USER
+    DB_PASS
+    DB_NAME
+    REDIS_HOST
+    REDIS_PASS
+    AWS_BUCKET
+    AWS_REGION
+    DOMAIN_NAME
+    USER_EMAIL
+    UPDATE_INTERVAL
+  )
+
+  for var in "${required_vars[@]}"; do
     if ! grep -q "^${var}=" "$ENV_FILE"; then
-      log "Error: ${var} not set in $ENV_FILE"
+      log "Error: ${var} is not set in $ENV_FILE"
       exit 1
     fi
   done
+
+  # Optional variables can be empty: N8N_BASIC_AUTH_ACTIVE, N8N_BASIC_AUTH_USER, N8N_BASIC_AUTH_PASSWORD,
+  # NODE_FUNCTION_ALLOW_EXTERNAL, SSL_CERT, SSL_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, EXECUTIONS_MODE,
+  # QUEUE_MODE, LOG_LEVEL, EXECUTIONS_TIMEOUT, WEBHOOK_TUNNEL_URL.
 }
 
 init_config() {
   log "Initializing configuration..."
   mkdir -p "$CONFIG_DIR" "$BACKUP_DIR"
+  
   if [ ! -f "$ENV_FILE" ]; then
     if [ -f "$ENV_TEMPLATE" ]; then
       cp "$ENV_TEMPLATE" "$ENV_FILE"
@@ -26,7 +48,10 @@ init_config() {
       exit 1
     fi
   fi
+
   validate_env
+
+  # Generate the Docker Compose file if it doesn't exist.
   if [ ! -f "$COMPOSE_FILE" ]; then
     log "Generating docker-compose.yml file..."
     cat <<'EOF' > "$COMPOSE_FILE"
@@ -39,19 +64,44 @@ services:
     ports:
       - "0.0.0.0:${N8N_PORT}:${N8N_PORT}"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
+    environment:
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - DB_TYPE=${DB_TYPE}
+      - DB_POSTGRESDB_HOST=${DB_HOST}
+      - DB_POSTGRESDB_PORT=${DB_PORT}
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASS}
+      - DB_POSTGRESDB_DATABASE=${DB_NAME}
+      - EXECUTIONS_MODE=${EXECUTIONS_MODE}
+      - QUEUE_MODE=${QUEUE_MODE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - NODE_FUNCTION_ALLOW_EXTERNAL=${NODE_FUNCTION_ALLOW_EXTERNAL}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - SSL_CERT=${SSL_CERT}
+      - SSL_KEY=${SSL_KEY}
+      - USER_EMAIL=${USER_EMAIL}
+      - UPDATE_INTERVAL=${UPDATE_INTERVAL}
+      - EXECUTIONS_TIMEOUT=${EXECUTIONS_TIMEOUT}
+      - WEBHOOK_TUNNEL_URL=${WEBHOOK_TUNNEL_URL}
 
   postgres:
     image: postgres:16-alpine
     env_file:
       - .env
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 5s
@@ -77,6 +127,6 @@ volumes:
 EOF
   fi
 
-  # Check AWS credentials as part of initialization
+  # Check AWS credentials (function from modules/aws.sh)
   check_aws_credentials
 }
