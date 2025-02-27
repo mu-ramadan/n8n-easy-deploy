@@ -46,14 +46,14 @@ else
     echo "Docker is already installed."
 fi
 
-# Docker Compose
-if ! command -v docker-compose >/dev/null 2>&1; then
+# Docker Compose Plugin
+if ! docker compose version >/dev/null 2>&1; then
     echo "Docker Compose not found. Installing Docker Compose plugin..."
     echo "Importing Caddy GPG key to resolve signature errors..."
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.gpg > /dev/null
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
 else
-    echo "Docker Compose is already installed."
+    echo "Docker Compose plugin is already installed."
 fi
 
 # AWS CLI

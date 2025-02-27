@@ -37,7 +37,7 @@ services:
       - .env
     restart: unless-stopped
     ports:
-      - "${N8N_PORT}:${N8N_PORT}"
+      - "0.0.0.0:${N8N_PORT}:${N8N_PORT}"
     depends_on:
       postgres:
         condition: service_healthy

@@ -19,12 +19,16 @@ check_dependencies() {
     log "Docker not found. Installing Docker..."
     curl -fsSL https://get.docker.com | sh
     sudo usermod -aG docker "$USER"
+  else
+    log "Docker is already installed."
   fi
-  if ! command -v docker-compose >/dev/null 2>&1; then
-    log "Docker Compose not found. Installing Docker Compose plugin..."
+  if ! docker compose version >/dev/null 2>&1; then
+    log "Docker Compose plugin not found. Installing Docker Compose plugin..."
     log "Importing Caddy GPG key..."
     curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/caddy-stable.gpg > /dev/null
     sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+  else
+    log "Docker Compose plugin is already installed."
   fi
   if ! command -v aws >/dev/null 2>&1; then
     log "AWS CLI not found. Installing AWS CLI..."
@@ -32,5 +36,7 @@ check_dependencies() {
     unzip awscliv2.zip
     sudo ./aws/install
     rm -rf awscliv2.zip aws
+  else
+    log "AWS CLI is already installed."
   fi
 }
