@@ -6,6 +6,7 @@ validate_env() {
   local required_vars=(
     N8N_PORT
     N8N_ENCRYPTION_KEY
+    N8N_RUNNERS_ENABLED
     DB_TYPE
     DB_HOST
     DB_PORT
@@ -13,6 +14,7 @@ validate_env() {
     DB_PASS
     DB_NAME
     REDIS_HOST
+    REDIS_PORT
     REDIS_PASS
     AWS_BUCKET
     AWS_REGION
@@ -27,10 +29,6 @@ validate_env() {
       exit 1
     fi
   done
-
-  # Optional variables can be empty: N8N_BASIC_AUTH_ACTIVE, N8N_BASIC_AUTH_USER, N8N_BASIC_AUTH_PASSWORD,
-  # NODE_FUNCTION_ALLOW_EXTERNAL, SSL_CERT, SSL_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, EXECUTIONS_MODE,
-  # QUEUE_MODE, LOG_LEVEL, EXECUTIONS_TIMEOUT, WEBHOOK_TUNNEL_URL.
 }
 
 init_config() {
@@ -51,7 +49,6 @@ init_config() {
 
   validate_env
 
-  # Generate the Docker Compose file if it doesn't exist.
   if [ ! -f "$COMPOSE_FILE" ]; then
     log "Generating docker-compose.yml file..."
     cat <<'EOF' > "$COMPOSE_FILE"
@@ -68,6 +65,7 @@ services:
       - redis
     environment:
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_RUNNERS_ENABLED=${N8N_RUNNERS_ENABLED}
       - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
       - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
@@ -81,7 +79,6 @@ services:
       - QUEUE_MODE=${QUEUE_MODE}
       - LOG_LEVEL=${LOG_LEVEL}
       - NODE_FUNCTION_ALLOW_EXTERNAL=${NODE_FUNCTION_ALLOW_EXTERNAL}
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
       - AWS_BUCKET=${AWS_BUCKET}
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -127,6 +124,6 @@ volumes:
 EOF
   fi
 
-  # Check AWS credentials (function from modules/aws.sh)
+  # Check AWS credentials (from modules/aws.sh)
   check_aws_credentials
 }
